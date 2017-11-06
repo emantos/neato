@@ -3,14 +3,15 @@ package com.kapre.neato.core;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 public class NeatoReader {
   public static final int LOOK_FOR_START_MARKER = 0;
   public static final int ACQUIRE_REST_PACKET = LOOK_FOR_START_MARKER + 1;
   
-  private NeatoDevice device = null;
+  private NeatoHardwareAbstraction device = null;
   
-  public NeatoReader(NeatoDevice device) {
+  public NeatoReader(NeatoHardwareAbstraction device) {
     this.device = Objects.requireNonNull(device);
   }
   
@@ -61,6 +62,20 @@ public class NeatoReader {
         return true;
       }
     });
-
+  }
+  
+  public CompletableFuture<List<NeatoPacket>> read360Scan() {
+	CompletableFuture<List<NeatoPacket>> future = new CompletableFuture<>();
+	try {
+	  new Thread(() -> {
+		  read360Scan((final List<NeatoPacket> packets) -> {
+			future.complete(packets);
+			return false;
+		  });
+	  	}).start();
+	} catch (Exception e) {
+		future.completeExceptionally(e);
+	}
+	return future;
   }
 }
